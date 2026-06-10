@@ -150,7 +150,7 @@ conn.close()
 ---
 
 ## 👩‍💻 Team
-Built with ❤️ at our first hackathon by a team of 4 beginner developers.
+ETLens AI
 
 ---
 
