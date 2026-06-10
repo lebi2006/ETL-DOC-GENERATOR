@@ -3,6 +3,12 @@
 > Automatically generate documentation, business explanations, flow diagrams, and impact analysis for any ETL script using AI.
 
 ---
+##  Live Demo
+👉 https://etlens.streamlit.app
+
+> Note: The live deployment uses Groq API (cloud-based Llama3) instead of 
+> Ollama (local Llama3) due to cloud server constraints. 
+> Both use the same Llama3 model — only the hosting differs.
 
 ## 🚨 The Problem
 In real companies, data engineers write hundreds of ETL scripts. Nobody documents them. New developers waste weeks understanding old code. One broken script can silently destroy entire data pipelines — and nobody knows what depends on what.
