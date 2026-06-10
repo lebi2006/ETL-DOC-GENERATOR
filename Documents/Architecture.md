@@ -74,4 +74,8 @@ flowchart TD
 |---|---|
 | ✅ Agent Loop | LangChain agent automatically loops through every ETL file in the folder |
 | ✅ MCP Tool Built | ASTReaderTool — custom LangChain BaseTool wrapping both parsers |
+<<<<<<< HEAD
 | ✅ External API Integration | Ollama REST API called via requests at http://127.0.0.1:11434 |
+=======
+| ✅ External API Integration | Ollama REST API called via requests at http://127.0.0.1:11434 |
+>>>>>>> 40a6eb1 (Added live demo link and fixed parsers)
