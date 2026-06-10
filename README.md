@@ -49,19 +49,29 @@ In real companies, data engineers write hundreds of ETL scripts. Nobody document
 ---
 
 ## 📁 Project Structure
+
+```
 etl-doc-generator/
-├── etl_samples/          # Sample ETL scripts
-├── parser/               # Python AST + SQL parsers
-├── ai/                   # LLM client, doc generator, RAG pipeline
-├── diagram/              # Graphviz flow diagrams
-├── impact/               # NetworkX impact analysis
-├── export/               # PDF report generator
-├── backend/              # FastAPI backend
-├── frontend/             # Streamlit frontend
-├── output/               # Generated docs, diagrams, reports
-├── run_pregenerate.py    # Pre-generate all outputs for demo
-└── requirements.txt
----
+├── 📂 etl_samples/          # Sample ETL scripts for testing
+├── 📂 parser/               # Python AST + SQL parsers
+├── 📂 ai/                   # LLM client, doc generator, RAG pipeline
+├── 📂 diagram/              # Graphviz flow diagram generator
+├── 📂 impact/               # NetworkX impact analysis
+├── 📂 export/               # PDF report generator
+├── 📂 backend/              # FastAPI REST API
+├── 📂 frontend/             # Streamlit web UI
+├── 📂 output/               # Generated docs, diagrams, reports
+│   ├── 📂 docs/             # Markdown documentation files
+│   ├── 📂 diagrams/         # PNG flow diagram files
+│   └── 📂 reports/          # PDF report files
+├── 📂 Documents/            # Project documentation
+├── 📂 mcp_tool/             # Custom MCP ASTReaderTool
+├── 📂 database/             # SQLite DB handler
+├── 🐍 run.py                # Start the full application
+├── 📄 requirements.txt      # All Python dependencies
+├── 📄 .env                  # Environment configuration
+└── 📄 README.md             # Project documentation
+```
 
 ## ⚡ Quick Start
 
