@@ -1,148 +1,77 @@
 # System Architecture — LENS ETL Script Documentation Generator
 
 ## Overview
-LENS is a multi-layer AI-powered application that automatically reads ETL 
-scripts and generates documentation, business explanations, flow diagrams, 
-and impact analysis reports.
+LENS is a multi-layer AI-powered application that automatically reads 
+ETL scripts and generates documentation, business explanations, flow 
+diagrams, and impact analysis reports.
 
 ---
 
-## Architecture Diagram (Text Representation)
-┌─────────────────────────────────────────────────────────────┐
-│                    STREAMLIT FRONTEND                        │
-│              (User uploads ETL folder path)                  │
-└─────────────────────┬───────────────────────────────────────┘
-│ HTTP Request
-▼
-┌─────────────────────────────────────────────────────────────┐
-│                    FASTAPI BACKEND                           │
-│                  (REST API Layer)                            │
-│     POST /process   GET /results   GET /impact/{file}       │
-└──────┬──────────────┬──────────────────────┬────────────────┘
-│              │                      │
-▼              ▼                      ▼
-┌──────────┐  ┌───────────────┐    ┌─────────────────┐
-│  PARSER  │  │   AI LAYER    │    │  DIAGRAM +      │
-│  LAYER   │  │               │    │  IMPACT LAYER   │
-│          │  │ llm_client    │    │                 │
-│ AST      │  │ doc_generator │    │ flow_diagram    │
-│ Parser   │  │ biz_explainer │    │ (Graphviz)      │
-│          │  │ rag_pipeline  │    │                 │
-│ SQL      │  │ (LangChain +  │    │ impact_analysis │
-│ Parser   │  │  FAISS)       │    │ (NetworkX)      │
-└──────┬───┘  └───────┬───────┘    └────────┬────────┘
-│              │                     │
-▼              ▼                     │
-┌──────────────────────────┐               │
-│      MCP TOOL            │               │
-│   ASTReaderTool          │               │
-│ (LangChain BaseTool)     │               │
-└──────────────────────────┘               │
-│              │                     │
-▼              ▼                     ▼
-┌─────────────────────────────────────────────────────────────┐
-│                    DATA LAYER                                │
-│         SQLite DB        output/docs      output/diagrams   │
-│       (metadata +        (Markdown)          (PNG)          │
-│        results)          output/reports                     │
-│                             (PDF)                           │
-└─────────────────────────────────────────────────────────────┘
-│
-▼
-┌─────────────────────────────────────────────────────────────┐
-│                    OLLAMA (LOCAL LLM)                        │
-│              Llama3 running on port 11434                    │
-│         Free — No API key — No data leaves system           │
-└─────────────────────────────────────────────────────────────┘
----
+## System Architecture
 
-## Module Descriptions
+```mermaid
+flowchart TD
+    A[👤 User — Streamlit Frontend\nUploads ETL folder path] -->|HTTP Request| B
 
-### 1. Streamlit Frontend (`frontend/app.py`)
-- Entry point for all users
-- Accepts ETL folder path as input
-- Calls FastAPI backend via HTTP
-- Displays documentation, diagrams, business purpose, impact analysis
-- Provides PDF export button
+    B[⚡ FastAPI Backend\nPOST /process\nGET /results\nGET /impact/filename]
 
-### 2. FastAPI Backend (`backend/main.py`)
-- REST API layer connecting frontend to all processing modules
-- Three endpoints: process, results, impact
-- Handles CORS for Streamlit connection
-- Orchestrates the full agent loop
+    B --> C[🔍 Parser Layer]
+    B --> D[🧠 AI Layer]
+    B --> E[📊 Diagram + Impact Layer]
 
-### 3. Parser Layer
-- `parser/python_parser.py` — Uses Python AST module to parse `.py` ETL files
-- `parser/sql_parser.py` — Uses sqlparse to parse `.sql` ETL files
-- Extracts sources, transformations, and targets from every file
+    C --> C1[AST Parser\npython_parser.py]
+    C --> C2[SQL Parser\nsql_parser.py]
 
-### 4. MCP Tool (`mcp_tool/ast_reader_tool.py`)
-- Custom LangChain BaseTool — ASTReaderTool
-- Agent calls this tool to read any ETL file
-- Wraps both parsers in a single callable tool interface
-- Satisfies mandatory MCP Tool requirement
+    C1 --> F[🔧 MCP Tool\nASTReaderTool\nLangChain BaseTool]
+    C2 --> F
 
-### 5. AI Layer (`ai/`)
-- `llm_client.py` — Connects to Ollama REST API at port 11434
-- `doc_generator.py` — Generates plain English documentation
-- `business_explainer.py` — Explains business purpose of each ETL script
-- `rag_pipeline.py` — FAISS vector store + Sentence Transformers for RAG
+    D --> D1[llm_client.py\nOllama REST API]
+    D --> D2[doc_generator.py\nDocumentation]
+    D --> D3[business_explainer.py\nBusiness Purpose]
+    D --> D4[rag_pipeline.py\nLangChain + FAISS]
 
-### 6. Diagram Layer (`diagram/flow_diagram.py`)
-- Uses Graphviz to draw directed data flow diagrams
-- Green nodes = sources, Blue nodes = transformations, Orange nodes = targets
-- Saves PNG to `output/diagrams/`
+    E --> E1[flow_diagram.py\nGraphviz PNG]
+    E --> E2[impact_analysis.py\nNetworkX Graph]
 
-### 7. Impact Analysis (`impact/impact_analysis.py`)
-- Uses NetworkX to build dependency graph across all ETL scripts
-- Identifies downstream scripts and tables affected by any change
-- Returns severity levels for each impact
+    F --> G[(🗄️ Data Layer)]
+    D --> G
+    E --> G
 
-### 8. Export Layer (`export/pdf_exporter.py`)
-- Uses fpdf2 to generate PDF reports
-- Includes documentation, business purpose, and impact sections
-- Saves to `output/reports/`
+    G --> G1[SQLite DB\nmetadata + results]
+    G --> G2[output/docs\nMarkdown files]
+    G --> G3[output/diagrams\nPNG files]
+    G --> G4[output/reports\nPDF files]
 
-### 9. Database Layer (`database/db_handler.py`)
-- SQLite database stores all parsed metadata and generated results
-- Enables GET /results endpoint to retrieve past processing runs
+    D1 --> H[🦙 Ollama Local LLM\nLlama3 on port 11434\nFree — No API key\nNo data leaves system]
+```
 
 ---
 
 ## Agent Loop Flow
-START
-│
-▼
-Pick next ETL file from folder
-│
-▼
-ASTReaderTool (MCP Tool) reads and parses file
-│
-▼
-Send parsed metadata to Ollama via REST API
-│
-├──→ Generate plain English documentation
-├──→ Generate business purpose explanation
-│
-▼
-Graphviz draws flow diagram → saves PNG
-│
-▼
-NetworkX builds impact graph → returns affected nodes
-│
-▼
-Save all results to SQLite + output folders
-│
-▼
-Any more files? → YES → go back to top
-→ NO  → return all results to frontend
-END
+
+```mermaid
+flowchart TD
+    Start([🚀 START]) --> A[Pick next ETL file from folder]
+    A --> B[🔧 ASTReaderTool MCP Tool\nReads and parses file]
+    B --> C[📤 Send parsed metadata\nto Ollama REST API]
+    C --> D[📝 Generate plain English\ndocumentation]
+    C --> E[💼 Generate business\npurpose explanation]
+    D --> F[🗺️ Graphviz draws\nflow diagram → PNG]
+    E --> F
+    F --> G[🔗 NetworkX builds\nimpact graph]
+    G --> H[💾 Save all results to\nSQLite + output folders]
+    H --> I{More files\nin folder?}
+    I -->|YES| A
+    I -->|NO| J[📤 Return all results\nto Streamlit frontend]
+    J --> End([✅ END])
+```
+
 ---
 
 ## Mandatory AI Capabilities Satisfied
 
-| Capability | How |
+| Capability | How Satisfied |
 |---|---|
-| Agent Loop | LangChain agent loops through every ETL file automatically |
-| MCP Tool (Built) | ASTReaderTool — custom built LangChain BaseTool |
-| External API Integration | Ollama REST API called via requests at port 11434 |
+| ✅ Agent Loop | LangChain agent automatically loops through every ETL file in the folder |
+| ✅ MCP Tool Built | ASTReaderTool — custom LangChain BaseTool wrapping both parsers |
+| ✅ External API Integration | Ollama REST API called via requests at http://127.0.0.1:11434 |
